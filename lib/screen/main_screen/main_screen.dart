@@ -1,6 +1,11 @@
+import 'dart:math';
+
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:kidslingo_game/model/bear_model.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -13,16 +18,17 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late AnimationController _controller;
 
   late Animation<double> _animation;
-  List bear = [
-    "assets/medium-teddy-bear.png",
-    "assets/small-teddy-bear.png",
-    "assets/small-teddy-bear.png",
-    "assets/small-teddy-bear.png",
-    "assets/medium-teddy-bear.png"
+  List<Bear> bear = [
+    Bear(size:"assets/medium-teddy-bear.png",weight: 10 ),
+    Bear(size:"assets/small-teddy-bear.png",weight: 5 ),
+    Bear(size: "assets/small-teddy-bear.png",weight: 5 ),
+    Bear(size:"assets/small-teddy-bear.png",weight: 5 ),
+    Bear(size:"assets/medium-teddy-bear.png",weight: 10 ),
   ];
-  List acceptBear=[
-    "assets/small-teddy-bear.png",
+  List<Bear> acceptBear=[
+    //Bear(size:"assets/small-teddy-bear.png",type: "drop" ),
   ];
+  double angle=-20;
   @override
   void initState() {
     SystemChrome.setPreferredOrientations([
@@ -32,9 +38,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     _controller = AnimationController(
         duration: const Duration(seconds: 3),
         vsync: this,
-        value: 0.93,
-        lowerBound: 0.95,
-        upperBound: 0.96);
+        value: 0,
+        upperBound: 1,);
     _animation = CurvedAnimation(parent: _controller, curve: Curves.linear);
 
     _controller.forward();
@@ -70,25 +75,156 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 children: [
                   Expanded(
                     child: Container(
+
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          Positioned(
-                              top: 107,
-                              left: 200,
-                              child: Container(
-                                child: Image.asset(
-                                  "assets/large-teddy-bear.png",
-                                  scale: 5,
+                          Transform.rotate(
+                            angle:angle/180 *  pi,
+                            child: Container(
+                              //color: Colors.white,
+                              child:Stack(
+                               // fit: StackFit.passthrough,
+                                alignment: Alignment.centerLeft,
+                                children: [
+                                Container(
+                                  padding:EdgeInsets.only(bottom: 85),
+                                  child: Image.asset(
+                                    "assets/large-teddy-bear.png",
+                                    scale: 5,
+                                  ),
                                 ),
-                              )),
-                          RotationTransition(
-                              turns: _animation,
-                              child: Image.asset(
-                                "assets/line.png",
-                                scale: 1.5,
-                                color: Colors.brown.shade100,
-                              )),
+                                Image.asset(
+                                  "assets/line.png",
+                                  scale:1.3,
+                                   color: Colors.brown.shade100,
+                                ),
+                                  Positioned(
+                                    right: 1,
+                                    top: 100,
+                                    child: Container(
+                                      height: 100,
+                                      child: DragTarget<Bear>(
+
+                                        builder: (context , data ,reject){
+                                          return Container(
+                                            width: 150,
+                                            child: ListView(
+                                              scrollDirection: Axis.horizontal,
+                                              children:  acceptBear
+                                                  .map((e) => Container(
+                                                width: 50,
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 0, vertical: 10),
+                                                child: Draggable<Bear>(
+                                                    onDragStarted: (){
+                                                      acceptBear.remove(e);
+                                                      angle=angle-e.weight;
+                                                      if(angle==0){
+                                                        AwesomeDialog(
+                                                          context: context,
+                                                          dialogType: DialogType.SUCCES,
+                                                          animType: AnimType.SCALE,
+                                                          title: 'Congratulation',
+                                                          desc: "you win",
+                                                          body: Row(
+                                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                            children: [
+                                                              Image.asset(
+                                                                "assets/large-teddy-bear.png",
+                                                                scale: 5,
+                                                              ),
+                                                              Text("="),
+                                                              Container(
+                                                                width: 120,
+                                                                height: 90,
+                                                                child: ListView(
+                                                                  scrollDirection: Axis.horizontal,
+                                                                  children: acceptBear.map((e) => Container(
+                                                                    width: 40,
+                                                                    child: Image.asset(e.size),)).toList(),),
+                                                              )
+                                                            ],),
+                                                          btnOkOnPress: () {
+                                                            // Navigator.pop(context,false);
+                                                          },
+                                                        )..show().then((value) {
+                                                          angle=-20;
+                                                          acceptBear.clear();
+                                                          setState(() {
+
+                                                          });
+                                                        });
+                                                      }
+                                                      setState(() {
+                                                      });
+                                                    },
+                                                    feedback:
+                                                    Image.asset(e.size, scale: 13),
+                                                    child: Image.asset(
+                                                      e.size,
+                                                      scale: 13,
+                                                    )),
+                                              )).toList(),
+                                            ),
+                                          );
+                                        },
+                                        onWillAccept: (data){
+                                          //print("accep" + accept.toString());
+                                          print(data);
+                                          return  true;
+                                        },
+                                        onAccept: (data){
+
+                                          //  print(data);
+                                          acceptBear.add(data);
+                                          //bear.removeWhere((element) => data==element);
+                                          angle=angle+data.weight;
+                                          print(angle);
+                                          setState(() {});
+                                          if(angle==0){
+                                            AwesomeDialog(
+                                              context: context,
+                                              dialogType: DialogType.SUCCES,
+                                              animType: AnimType.SCALE,
+                                              title: 'Congratulation',
+                                              desc: "you win",
+                                              body: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                children: [
+                                                Image.asset(
+                                                  "assets/large-teddy-bear.png",
+                                                  scale: 5,
+                                                ),
+                                                Text("="),
+                                                Container(
+                                                  width: 120,
+                                                  height: 90,
+                                                  child: ListView(
+                                                    scrollDirection: Axis.horizontal,
+                                                    children: acceptBear.map((e) => Container(
+                                                      width: 40,
+                                                      child: Image.asset(e.size),)).toList(),),
+                                                )
+                                              ],),
+                                              btnOkOnPress: () {
+                                               // Navigator.pop(context,false);
+                                              },
+                                            )..show().then((value) {
+                                              angle=-20;
+                                              acceptBear.clear();
+                                              setState(() {
+
+                                              });
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                              ],) ,
+                            ),
+                          ),
                           Container(
                             child: Image.asset(
                               "assets/clock.png",
@@ -96,50 +232,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               color: Colors.brown.shade300,
                             ),
                           ),
-                          Positioned(
-                            left:400 ,
-                            top: 90,
-                            child: Container(
-                              height: 100,
-                              child: Row(
-                                children: [
-                                  DragTarget(
 
-                                    builder: (context ,acceptdata,rejectdata){
-                                      return Container(
-                                       width: 500,
-                                        child: ListView(
-                                          scrollDirection: Axis.horizontal,
-                                          children:  acceptBear
-                                              .map((e) => Container(
-                                            width: 100,
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 0, vertical: 10),
-                                            child: Draggable(
-                                                feedback:
-                                                Image.asset(e, scale: 13),
-                                                child: Image.asset(
-                                                  e,
-                                                  scale: 13,
-                                                )),
-                                          )).toList(),
-                                        ),
-                                      );
-                                    },
-                                    onWillAccept: (data){
-                                    return  true;
-                                    },
-                                  onAccept: (data){
-                                    acceptBear.add(data);
-                                  },
-                                    onLeave: (data){
-                                      acceptBear.removeWhere((element) => data==element);
-                                    },
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
                           Positioned(
                             bottom: 7,
                             child: Container(
@@ -159,11 +252,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                     .map((e) => Container(
                                           padding: EdgeInsets.symmetric(
                                               horizontal: 0, vertical: 10),
-                                          child: Draggable(
+                                          child: Draggable<Bear>(
+                                            data: e,
                                               feedback:
-                                                  Image.asset(e, scale: 13),
+                                                  Image.asset(e.size, scale: 13),
                                               child: Image.asset(
-                                                e,
+                                                e.size,
                                                 scale: 13,
                                               )),
                                         ))
