@@ -108,18 +108,25 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
                                         builder: (context , data ,reject){
                                           return Container(
-                                            width: 150,
+                                            width: 160,
                                             child: ListView(
                                               scrollDirection: Axis.horizontal,
                                               children:  acceptBear
                                                   .map((e) => Container(
-                                                width: 50,
+                                                width: 40,
                                                 padding: EdgeInsets.symmetric(
                                                     horizontal: 0, vertical: 10),
                                                 child: Draggable<Bear>(
-                                                    onDragStarted: (){
+                                                    onDragStarted: ()async{
                                                       acceptBear.remove(e);
-                                                      angle=angle-e.weight;
+                                                      for(double i=0;i<e.weight;i++){
+                                                       await Future.delayed(Duration(microseconds: 9000),(){
+                                                          setState(() {
+                                                            angle=angle-1;
+                                                          });
+                                                        });
+                                                      }
+                                                      //angle=angle-e.weight;
                                                       if(angle==0){
                                                         AwesomeDialog(
                                                           context: context,
@@ -136,7 +143,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                               ),
                                                               Text("="),
                                                               Container(
-                                                                width: 120,
+                                                                width: 160,
                                                                 height: 90,
                                                                 child: ListView(
                                                                   scrollDirection: Axis.horizontal,
@@ -174,12 +181,18 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                           print(data);
                                           return  true;
                                         },
-                                        onAccept: (data){
+                                        onAccept: (data)async{
 
                                           //  print(data);
                                           acceptBear.add(data);
                                           //bear.removeWhere((element) => data==element);
-                                          angle=angle+data.weight;
+                                          for(double i=0;i<data.weight;i++){
+                                          await  Future.delayed(Duration(microseconds: 9000 ),(){
+                                              setState(() {
+                                          angle=angle+1;
+                                              });
+                                            });
+                                          }
                                           print(angle);
                                           setState(() {});
                                           if(angle==0){
@@ -198,7 +211,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                                                 ),
                                                 Text("="),
                                                 Container(
-                                                  width: 120,
+                                                  width: 160,
                                                   height: 90,
                                                   child: ListView(
                                                     scrollDirection: Axis.horizontal,
@@ -232,7 +245,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                               color: Colors.brown.shade300,
                             ),
                           ),
-
+                          // bottom bear list
                           Positioned(
                             bottom: 7,
                             child: Container(
